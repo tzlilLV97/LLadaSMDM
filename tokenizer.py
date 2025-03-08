@@ -32,5 +32,5 @@ def decode_audio(wavtokenizer, token_path, audio_outpath, bandwidth_id=0, device
     bandwidth_id = torch.tensor([bandwidth_id])
     audio_out = wavtokenizer.decode(features, bandwidth_id=bandwidth_id)
     if save:
-        torchaudio.save(audio_outpath + ".wav", audio_out, sample_rate=16000, encoding='PCM_S', bits_per_sample=16)
+        torchaudio.save(audio_outpath + ".wav", audio_out, sample_rate=24000, encoding='PCM_S', bits_per_sample=16)
     return audio_out

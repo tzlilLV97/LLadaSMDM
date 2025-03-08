@@ -12,6 +12,12 @@ import torch
 from intervaltree import IntervalTree
 from scipy.io import wavfile
 
+import os
+import torch
+import torch.utils.data as data
+import tokenizer
+import torchaudio
+
 sz_float = 4    # size of a float
 epsilon = 10e-8 # fudge factor for normalization
 
@@ -141,6 +147,8 @@ class MusicNet(data.Dataset):
         if self.jitter > 0:
             jitter = np.random.uniform(-self.jitter,self.jitter)
 
+        #Check if the index is already existed in the tokens directory
+
         rec_id = self.rec_ids[np.random.randint(0,len(self.rec_ids))]
         s = np.random.randint(0,self.records[rec_id][1]-(2.**((shift+jitter)/12.))*self.window)
         return self.access(rec_id,s,shift,jitter)
@@ -236,4 +244,49 @@ class MusicNet(data.Dataset):
                     tree[start_time:end_time] = (instrument,note,start_beat,end_beat,note_value)
             trees[uid] = tree
         return trees
+    
+
+
+class TokenizedMusicNet(data.Dataset):
+    """Dataset for loading precomputed MusicNet tokens or encoding on-the-fly."""
+
+    def __init__(self, root, wavtokenizer, encode_on_fly=False):
+        """
+        Args:
+            root (str): Path to the directory containing tokenized `.pt` files.
+            wavtokenizer (WavTokenizer): Preloaded WavTokenizer model for encoding.
+            encode_on_fly (bool): If True, encode WAV files on-the-fly if tokens don't exist.
+        """
+        self.root = root
+        self.wavtokenizer = wavtokenizer
+        self.encode_on_fly = encode_on_fly
+        self.files = [f for f in os.listdir(root) if f.endswith(".pt")]
+        
+        if self.encode_on_fly:
+            # Also include wav files for on-the-fly encoding
+            self.wav_files = [f for f in os.listdir(root) if f.endswith(".wav")]
+            self.files.extend(self.wav_files)
+
+    def __len__(self):
+        return len(self.files)
+
+    def __getitem__(self, idx):
+        file_name = self.files[idx]
+        file_path = os.path.join(self.root, file_name)
+
+        if file_name.endswith(".pt"):
+            # Load precomputed tokens
+            print(f"Loading {file_name}... which is a token")
+            data = torch.load(file_path)
+            return data["tokens"].long()  # Ensure long tensor format
+
+        elif self.encode_on_fly and file_name.endswith(".wav"):
+            # Encode on-the-fly if tokens are missing
+            print(f"Encoding {file_name} on-the-fly...")
+            tokens = self.encode_audio(file_path)
+            return tokens.long()
+
+    def encode_audio(self, audio_path):
+        """Encode audio file to tokens using WavTokenizer."""
+        return tokenizer.encode_audio(self.wavtokenizer, audio_path)
     
