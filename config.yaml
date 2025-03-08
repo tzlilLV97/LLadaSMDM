@@ -1,0 +1,30 @@
+defaults:
+  - _self_
+
+checkpoint_path: "./checkpoints"
+
+gpu:
+  device: "1"
+  
+   
+data:
+  train:
+    name: musicnet
+    root: ./musicnet
+    train: True
+    download: True
+    window: 16384
+    num_workers: 4
+    batch_size: 100
+    shuffle: True
+    pin_memory: True
+  test:
+    name: musicnet
+    root: ./musicnet
+    train: False
+    window: 16384
+    epoch_size: 50000
+    num_workers: 4
+    batch_size: 100
+    shuffle: False
+    pin_memory: True

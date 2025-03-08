@@ -1,0 +1,5 @@
+Download the model "wavtokenizer_medium_music_audio_320_24k" from:
+
+https://huggingface.co/novateur/WavTokenizer-medium-music-audio-75token/blob/main/wavtokenizer_medium_music_audio_320_24k.ckpt
+
+and store it under "models" file.
